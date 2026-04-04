@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Canvas Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+    <div id="header">
+        <h1>Air Canvas Pro</h1>
+        <p>Draw with index finger • Erase with open palm</p>
+    </div>
+    
+    <div id="controls">
+        <div class="control-group">
+            <label for="color-picker">Brush Color:</label>
+            <input type="color" id="color-picker" value="#00ff88">
+        </div>
+        <div class="control-group">
+            <label for="brush-size">Brush Size:</label>
+            <input type="range" id="brush-size" min="1" max="50" value="8">
+            <span id="size-value">8px</span>
+        </div>
+        <div class="control-group">
+            <button id="clear-btn">Clear All</button>
+            <button id="undo-btn">Undo</button>
+            <button id="save-btn">Save Drawing</button>
+        </div>
+        <div class="control-group">
+            <button id="camera-toggle">Show Camera</button>
+        </div>
+    </div>
+    
+    <div id="status">
+        <span id="gesture-status">Ready</span>
+    </div>
+    
+    <script src="sketch.js"></script>
+</body>
+</html>
