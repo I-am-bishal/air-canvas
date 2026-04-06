@@ -110,3 +110,222 @@ video {
     z-index: 99;
     object-fit: cover;
 }
+
+/* HUD Camera Preview */
+#hud-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 300;
+}
+
+#hud-wrapper {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #00ff88;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 
+        0 0 20px rgba(0, 255, 136, 0.3),
+        inset 0 0 20px rgba(0, 255, 136, 0.05);
+    backdrop-filter: blur(5px);
+}
+
+#hud-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transform: scaleX(-1); /* Mirror effect */
+}
+
+#hud-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    box-shadow: inset 0 0 1px rgba(0, 255, 136, 0.3);
+}
+
+#hud-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+#hud-crosshair::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #00ccff, transparent);
+    transform: translateY(-50%);
+}
+
+#hud-crosshair::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #00ccff, transparent);
+    transform: translateX(-50%);
+}
+
+.hud-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #00ff88;
+    opacity: 0.6;
+}
+
+.hud-corner-tl {
+    top: 10px;
+    left: 10px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.hud-corner-tr {
+    top: 10px;
+    right: 10px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.hud-corner-bl {
+    bottom: 10px;
+    left: 10px;
+    border-right: none;
+    border-top: none;
+}
+
+.hud-corner-br {
+    bottom: 10px;
+    right: 10px;
+    border-left: none;
+    border-top: none;
+}
+
+#hud-status {
+    position: absolute;
+    bottom: 8px;
+    left: 10px;
+    display: flex;
+    gap: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hud-status-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.hud-label {
+    color: #00ff88;
+    opacity: 0.7;
+}
+
+.hud-value {
+    font-weight: bold;
+    color: #00ff88;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.hud-value.active {
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+}
+
+.hud-value.warning {
+    color: #ffaa00;
+    text-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+}
+
+.hud-value.error {
+    color: #ff3333;
+    text-shadow: 0 0 10px rgba(255, 51, 51, 0.8);
+}
+
+#hud-toggle {
+    position: absolute;
+    top: -35px;
+    right: 0;
+    background: linear-gradient(45deg, #00ff88, #00ccff);
+    color: #0f3460;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+    z-index: 301;
+}
+
+#hud-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes scan-line {
+    0% {
+        top: 0;
+    }
+    100% {
+        top: 100%;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #hud-container {
+        bottom: 20px;
+        right: 20px;
+    }
+
+    #hud-wrapper {
+        width: 220px;
+        height: 220px;
+    }
+
+    #hud-status {
+        font-size: 0.7rem;
+        gap: 8px;
+    }
+}
