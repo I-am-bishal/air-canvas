@@ -3,42 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Air Canvas Pro</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <title>Air Canvas Pro - Gesture-Based Drawing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav a {
+            color: #00ff88;
+            text-decoration: none;
+            margin-left: 2rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            color: #00ccff;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 5%;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            color: #0f3460;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.3);
+            margin-right: 1rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            color: #00ccff;
+            border: 2px solid #00ccff;
+            box-shadow: none;
+        }
+
+        .cta-button.secondary:hover {
+            background: rgba(0, 204, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 204, 255, 0.3);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 5%;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(15, 52, 96, 0.4);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            border-color: rgba(0, 255, 136, 0.5);
+            background: rgba(15, 52, 96, 0.6);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #00ff88;
+        }
+
+        .feature-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 6rem 5%;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f3460;
+            margin: 0 auto 1rem;
+        }
+
+        .step h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step p {
+            color: #b0b0b0;
+            font-size: 0.95rem;
+        }
+
+        /* Gestures Section */
+        .gestures {
+            padding: 6rem 5%;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .gestures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gesture-item {
+            background: rgba(15, 52, 96, 0.4);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .gesture-item.draw {
+            border-color: #00ff88;
+        }
+
+        .gesture-item.draw:hover {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .gesture-item.erase {
+            border-color: #ff6b6b;
+        }
+
+        .gesture-item.erase:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .gesture-name {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .gesture-item.draw .gesture-name {
+            color: #00ff88;
+        }
+
+        .gesture-item.erase .gesture-name {
+            color: #ff6b6b;
+        }
+
+        .gesture-description {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 5%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(0, 255, 136, 0.1);
+            color: #b0b0b0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.1rem;
+            }
+
+            nav a {
+                margin-left: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="header">
-        <h1>Air Canvas Pro</h1>
-        <p>Draw with index finger • Erase with open palm</p>
-    </div>
-    
-    <div id="controls">
-        <div class="control-group">
-            <label for="color-picker">Brush Color:</label>
-            <input type="color" id="color-picker" value="#00ff88">
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">Air Canvas Pro</div>
+        <div>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#gestures">Gestures</a>
         </div>
-        <div class="control-group">
-            <label for="brush-size">Brush Size:</label>
-            <input type="range" id="brush-size" min="1" max="50" value="8">
-            <span id="size-value">8px</span>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Draw with Your Hands in the Air</h1>
+            <p class="subtitle">Professional gesture-based drawing powered by AI hand tracking</p>
+            <button class="cta-button" onclick="location.href='app.html'">Launch Air Canvas</button>
+            <button class="cta-button secondary" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">Learn More</button>
         </div>
-        <div class="control-group">
-            <button id="clear-btn">Clear All</button>
-            <button id="undo-btn">Undo</button>
-            <button id="save-btn">Save Drawing</button>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">✨ Powerful Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Intuitive Drawing</h3>
+                <p>Use your index finger to draw smooth, natural strokes with real-time hand tracking</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Erasing</h3>
+                <p>Open your palm fully to erase nearby drawings with precision control</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌈</div>
+                <h3>Color Customization</h3>
+                <p>Choose any color from the full spectrum to match your creative vision</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎚️</div>
+                <h3>Brush Control</h3>
+                <p>Adjust brush size from 1-50px for detailed work or bold strokes</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">↩️</div>
+                <h3>Undo Support</h3>
+                <p>Step back through your drawing history with a single click</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💾</div>
+                <h3>Save & Export</h3>
+                <p>Export your masterpiece as PNG to share with the world</p>
+            </div>
         </div>
-        <div class="control-group">
-            <button id="camera-toggle">Show Camera</button>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <h2 class="section-title">🚀 How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Allow Camera Access</h3>
+                <p>Grant permission to use your webcam for hand tracking</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Position Your Hand</h3>
+                <p>Place your hand in front of the camera within the visible area</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Start Drawing</h3>
+                <p>Extend your index finger to draw or open your palm to erase</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Customize & Export</h3>
+                <p>Adjust colors, sizes, and save your amazing artwork</p>
+            </div>
         </div>
-    </div>
-    
-    <div id="status">
-        <span id="gesture-status">Ready</span>
-    </div>
-    
-    <script src="sketch.js"></script>
+    </section>
+
+    <!-- Gestures Section -->
+    <section class="gestures" id="gestures">
+        <h2 class="section-title">🖐️ Hand Gestures</h2>
+        <div class="gestures-grid">
+            <div class="gesture-item draw">
+                <div class="gesture-name">Index Finger</div>
+                <div class="gesture-description">
+                    Extend only your index finger to draw smooth, precise lines on the canvas. Perfect for detailed artwork.
+                </div>
+            </div>
+            <div class="gesture-item erase">
+                <div class="gesture-name">Open Palm</div>
+                <div class="gesture-description">
+                    Open your hand fully with all fingers spread to activate the eraser and remove drawings in the area.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Air Canvas Pro. Powered by MediaPipe & p5.js</p>
+    </footer>
 </body>
 </html>
