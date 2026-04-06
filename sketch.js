@@ -1,351 +1,236 @@
-let handtrack;
-let pointerX = 0, pointerY = 0;
-let isDrawing = false;
-let paths = []; // Stores the drawing points
-let history = []; // For undo
+/**
+ * AIR CANVAS PRO - COMPLETE ENGINE
+ * Feature: Continuous Line Rendering & Hand Tracking
+ */
+
 let video;
+let hands;
+let camera;
+
+// Coordinate State & Smoothing
+let pointerX = 0, pointerY = 0;
+let smoothedX = 0, smoothedY = 0;
+const sensitivity = 0.25; 
+
+// Drawing State: Continuous Path Logic
+let allPaths = [];      // Stores finished strokes: { points: [], color: '', size: 0 }
+let currentStroke = []; // Points for the line currently being drawn
+let isDrawing = false;
 let eraseMode = false;
 let showCamera = false;
-let eraseRadius = 50;
+
+// Brush Settings
 let brushColor = '#00ff88';
 let brushSize = 8;
 
-// HUD Variables
-let hudCanvas;
-let hudCtx;
-let handDetected = false;
-let lightingQuality = 'good';
-let lastHands = null;
-let hudVisible = true;
-
 function setup() {
-    createCanvas(windowWidth, windowHeight);
-    
+    // 1. Initialize Canvas
+    const canvas = createCanvas(windowWidth, windowHeight);
+    canvas.parent(document.body);
+
+    // 2. Initialize Camera Feed
     video = createCapture(VIDEO);
-    video.size(1280, 720);
-    video.hide(); // Hide the video element
-    
-    // Initialize MediaPipe Hands
-    const hands = new Hands({
+    video.size(280, 280);
+    video.parent('hud-wrapper'); // Mount inside the professional HUD
+    video.hide(); 
+
+    // 3. Initialize MediaPipe Hands AI
+    hands = new Hands({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
 
     hands.setOptions({
         maxNumHands: 1,
         modelComplexity: 1,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
     });
 
     hands.onResults(gotHands);
 
-    const camera = new Camera(video.elt, {
+    // 4. Start Camera Heartbeat
+    camera = new Camera(video.elt, {
         onFrame: async () => {
             await hands.send({ image: video.elt });
         },
-        width: 1280,
-        height: 720
+        width: 280,
+        height: 280
     });
     camera.start();
 
-    // Initialize HUD Canvas
-    hudCanvas = document.getElementById('hud-canvas');
-    hudCtx = hudCanvas.getContext('2d');
-    hudCanvas.width = 280;
-    hudCanvas.height = 280;
+    setupUIListeners();
+}
 
-    // HUD Toggle Button
-    const hudToggleBtn = document.getElementById('hud-toggle');
-    hudToggleBtn.addEventListener('click', () => {
-        hudVisible = !hudVisible;
-        const hudContainer = document.getElementById('hud-container');
-        hudContainer.style.display = hudVisible ? 'block' : 'none';
-        updateHUDStatus();
-    });
-
-    // Camera toggle button with professional positioning
-    const btn = document.getElementById('camera-toggle');
-    btn.addEventListener('click', () => {
+function setupUIListeners() {
+    // Camera Toggle
+    document.getElementById('camera-toggle').addEventListener('click', (e) => {
         showCamera = !showCamera;
         if (showCamera) {
             video.show();
-            video.style('border-radius', '15px');
-            video.style('border', '2px solid rgba(0, 255, 136, 0.5)');
-            video.style('box-shadow', '0 8px 32px rgba(0, 0, 0, 0.3)');
-            video.style('object-fit', 'cover');
-            // Position: bottom-right corner
-            video.position(windowWidth - 270, windowHeight - 270);
-            video.size(250, 250);
-            btn.textContent = 'Hide Camera';
+            e.target.textContent = 'Hide Camera';
         } else {
             video.hide();
-            btn.textContent = 'Show Camera';
+            e.target.textContent = 'Show Camera';
         }
     });
 
-    // Handle window resize
-    window.addEventListener('resize', () => {
-        if (showCamera) {
-            video.position(windowWidth - 270, windowHeight - 270);
-        }
-    });
-
-    // Color picker
-    const colorPicker = document.getElementById('color-picker');
-    colorPicker.addEventListener('input', (e) => {
-        brushColor = e.target.value;
-    });
-
-    // Brush size slider
-    const brushSizeSlider = document.getElementById('brush-size');
-    const sizeValue = document.getElementById('size-value');
-    brushSizeSlider.addEventListener('input', (e) => {
+    // Control Listeners
+    document.getElementById('color-picker').addEventListener('input', (e) => brushColor = e.target.value);
+    document.getElementById('brush-size').addEventListener('input', (e) => {
         brushSize = parseInt(e.target.value);
-        sizeValue.textContent = brushSize + 'px';
+        document.getElementById('size-value').textContent = brushSize + 'px';
     });
-
-    // Clear button
+    
     document.getElementById('clear-btn').addEventListener('click', () => {
-        paths = [];
-        history = [];
-        updateStatus('Canvas cleared');
+        allPaths = [];
+        currentStroke = [];
+        updateStatus('Canvas Cleared');
     });
 
-    // Undo button
     document.getElementById('undo-btn').addEventListener('click', () => {
-        if (history.length > 0) {
-            paths = history.pop();
-            updateStatus('Undid last action');
-        }
+        if (allPaths.length > 0) allPaths.pop();
+        updateStatus('Undo Successful');
     });
 
-    // Save button
-    document.getElementById('save-btn').addEventListener('click', () => {
-        saveCanvas('air-canvas-drawing', 'png');
-        updateStatus('Drawing saved');
-    });
-}
-
-function updateStatus(message) {
-    const statusEl = document.getElementById('gesture-status');
-    statusEl.textContent = message;
-    setTimeout(() => statusEl.textContent = 'Ready', 2000);
-}
-
-function isFist(landmarks) {
-    // All fingers curled
-    const fingers = [
-        [8, 6], // index
-        [12, 10], // middle
-        [16, 14], // ring
-        [20, 18] // pinky
-    ];
-    let curled = 0;
-    for (let [tip, pip] of fingers) {
-        if (landmarks[tip].y > landmarks[pip].y) curled++;
-    }
-    return curled >= 4;
-}
-
-function isPalmOpen(landmarks) {
-    // All fingers extended
-    const fingers = [
-        [8, 6], // index
-        [12, 10], // middle
-        [16, 14], // ring
-        [20, 18] // pinky
-    ];
-    let extended = 0;
-    for (let [tip, pip] of fingers) {
-        if (landmarks[tip].y < landmarks[pip].y) extended++;
-    }
-    return extended >= 4;
-}
-
-function isIndexOnly(landmarks) {
-    // Only index finger extended
-    const indexExtended = landmarks[8].y < landmarks[6].y;
-    const middleCurled = landmarks[12].y > landmarks[10].y;
-    const ringCurled = landmarks[16].y > landmarks[14].y;
-    const pinkyCurled = landmarks[20].y > landmarks[18].y;
-    return indexExtended && middleCurled && ringCurled && pinkyCurled;
+    document.getElementById('save-btn').addEventListener('click', () => saveCanvas('air-canvas-export', 'png'));
 }
 
 function gotHands(results) {
+    const handStatus = document.getElementById('hand-status');
+    
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
-        const indexTip = landmarks[8];
-        pointerX = width - (indexTip.x * width); // Flip for mirror effect
-        pointerY = indexTip.y * height;
         
-        handDetected = true;
-        lastHands = results;
+        // Map coordinates with Mirror Effect
+        pointerX = width - (landmarks[8].x * width);
+        pointerY = landmarks[8].y * height;
         
+        // HUD Update
+        handStatus.className = 'hud-value active';
+        handStatus.textContent = '●';
+
+        // GESTURE LOGIC
         if (isPalmOpen(landmarks)) {
-            if (!eraseMode) {
-                history.push([...paths]); // Save state before erasing
-            }
+            // ERASER MODE
+            finalizeCurrentStroke();
             eraseMode = true;
             isDrawing = false;
-            updateStatus('Erasing');
+            updateStatus('Mode: Eraser');
+            runSpatialEraser(pointerX, pointerY);
         } else if (isIndexOnly(landmarks)) {
-            if (eraseMode || !isDrawing) {
-                history.push([...paths]); // Save state before drawing
-            }
+            // DRAWING MODE
             eraseMode = false;
             isDrawing = true;
-            paths.push({x: pointerX, y: pointerY});
-            updateStatus('Drawing');
+            updateStatus('Mode: Drawing');
+            currentStroke.push({ x: pointerX, y: pointerY });
         } else {
-            eraseMode = false;
+            // IDLE MODE (Hand visible but not drawing)
+            finalizeCurrentStroke();
             isDrawing = false;
-            updateStatus('Ready');
+            eraseMode = false;
+            updateStatus('System: Ready');
         }
     } else {
-        handDetected = false;
+        // NO HAND DETECTED
+        handStatus.className = 'hud-value error';
+        handStatus.textContent = '○';
+        finalizeCurrentStroke();
         isDrawing = false;
-        eraseMode = false;
-        updateStatus('No hand detected');
+    }
+}
+
+function finalizeCurrentStroke() {
+    if (currentStroke.length > 0) {
+        allPaths.push({
+            points: [...currentStroke],
+            color: brushColor,
+            size: brushSize
+        });
+        currentStroke = [];
     }
 }
 
 function draw() {
-    clear();
-    background(0, 0, 0, 50); // Slight trail effect
+    background(10, 10, 18); 
+    drawGrid();
 
-    // Erase points near pointer if in erase mode
-    if (eraseMode) {
-        paths = paths.filter(p => dist(p.x, p.y, pointerX, pointerY) > eraseRadius);
-    }
+    // Smooth Cursor Movement (Lerp)
+    smoothedX = lerp(smoothedX, pointerX, sensitivity);
+    smoothedY = lerp(smoothedY, pointerY, sensitivity);
 
-    // Draw the path
+    // 1. Render Saved Strokes as Continuous Lines
     noFill();
-    stroke(brushColor);
-    strokeWeight(brushSize);
-    beginShape();
-    for (let p of paths) {
-        vertex(p.x, p.y);
+    for (let strokeObj of allPaths) {
+        stroke(strokeObj.color);
+        strokeWeight(strokeObj.size);
+        beginShape();
+        for (let p of strokeObj.points) {
+            vertex(p.x, p.y);
+        }
+        endShape();
     }
-    endShape();
 
-    // Draw hand focus indicator (professional frame)
-    stroke(brushColor);
-    strokeWeight(1);
-    // Vertical guide lines
-    line(pointerX - 40, pointerY - 80, pointerX - 40, pointerY + 80);
-    line(pointerX + 40, pointerY - 80, pointerX + 40, pointerY + 80);
-    // Horizontal guide lines
-    line(pointerX - 40, pointerY - 80, pointerX + 40, pointerY - 80);
-    line(pointerX - 40, pointerY + 80, pointerX + 40, pointerY + 80);
-    
-    // Draw cursor with professional indicator
+    // 2. Render Active Stroke (The line you are currently drawing)
+    if (currentStroke.length > 0) {
+        stroke(brushColor);
+        strokeWeight(brushSize);
+        beginShape();
+        for (let p of currentStroke) {
+            vertex(p.x, p.y);
+        }
+        endShape();
+    }
+
+    // 3. Render Interactive Cursor HUD
+    renderCursor(smoothedX, smoothedY);
+}
+
+function renderCursor(x, y) {
     if (eraseMode) {
-        stroke(255, 0, 0);
+        stroke(255, 50, 50);
         strokeWeight(2);
         noFill();
-        circle(pointerX, pointerY, eraseRadius * 2);
-        fill(255, 0, 0, 50);
-        circle(pointerX, pointerY, eraseRadius * 2);
-    } else if (isDrawing) {
+        circle(x, y, 50 + sin(frameCount * 0.1) * 5);
+        fill(255, 50, 50, 20);
+        circle(x, y, 50);
+    } else {
         fill(brushColor);
         noStroke();
-        ellipse(pointerX, pointerY, brushSize, brushSize);
-        // Outline
-        stroke(brushColor);
-        strokeWeight(1);
-        noFill();
-        ellipse(pointerX, pointerY, brushSize + 4, brushSize + 4);
-    }
-
-    // Update HUD Display
-    if (hudVisible) {
-        updateHUDDisplay();
-        updateHUDStatus();
+        ellipse(x, y, brushSize + 4, brushSize + 4);
     }
 }
 
-// HUD Functions
-function updateHUDDisplay() {
-    if (!video || !hudCtx) return;
-
-    // Get video dimensions
-    const videoWidth = video.elt.videoWidth;
-    const videoHeight = video.elt.videoHeight;
-    
-    // Clear canvas
-    hudCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    hudCtx.fillRect(0, 0, 280, 280);
-
-    // Draw mirrored video feed
-    hudCtx.save();
-    hudCtx.scale(-1, 1); // Horizontal flip for mirror
-    hudCtx.translate(-280, 0);
-    hudCtx.drawImage(video.elt, 0, 0, 280, 280);
-    hudCtx.restore();
-
-    // Assess lighting quality
-    assessLighting();
-}
-
-function assessLighting() {
-    if (!hudCtx || !lastHands) {
-        lightingQuality = 'good';
-        return;
-    }
-
-    // Get image data to assess brightness
-    const imageData = hudCtx.getImageData(0, 0, 280, 280);
-    const data = imageData.data;
-    
-    let totalBrightness = 0;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        totalBrightness += (r + g + b) / 3;
-    }
-    
-    const avgBrightness = totalBrightness / (280 * 280);
-    
-    if (avgBrightness < 50) {
-        lightingQuality = 'dark';
-    } else if (avgBrightness > 200) {
-        lightingQuality = 'bright';
-    } else {
-        lightingQuality = 'good';
+function runSpatialEraser(x, y) {
+    // Professional distance-based point removal
+    for (let i = allPaths.length - 1; i >= 0; i--) {
+        allPaths[i].points = allPaths[i].points.filter(p => dist(p.x, p.y, x, y) > 40);
+        
+        // Remove empty paths
+        if (allPaths[i].points.length === 0) {
+            allPaths.splice(i, 1);
+        }
     }
 }
 
-function updateHUDStatus() {
-    // Update camera status
-    const camStatus = document.getElementById('cam-status');
-    camStatus.className = 'hud-value active';
-    camStatus.textContent = '●';
+function drawGrid() {
+    stroke(255, 255, 255, 10);
+    for (let i = 0; i < width; i += 60) line(i, 0, i, height);
+    for (let i = 0; i < height; i += 60) line(0, i, width, i);
+}
 
-    // Update hand detection status
-    const handStatus = document.getElementById('hand-status');
-    if (handDetected) {
-        handStatus.className = 'hud-value active';
-        handStatus.textContent = '●';
-    } else {
-        handStatus.className = 'hud-value error';
-        handStatus.textContent = '○';
-    }
+function updateStatus(msg) {
+    const el = document.getElementById('gesture-status');
+    if (el) el.textContent = `SYSTEM // ${msg.toUpperCase()}`;
+}
 
-    // Update lighting status
-    const lightStatus = document.getElementById('light-status');
-    switch (lightingQuality) {
-        case 'good':
-            lightStatus.className = 'hud-value active';
-            lightStatus.textContent = '●';
-            break;
-        case 'dark':
-            lightStatus.className = 'hud-value warning';
-            lightStatus.textContent = '▼';
-            break;
-        case 'bright':
-            lightStatus.className = 'hud-value warning';
-            lightStatus.textContent = '▲';
-            break;
-    }
+// Gesture Helpers
+function isPalmOpen(lm) {
+    return lm[8].y < lm[6].y && lm[12].y < lm[10].y && lm[16].y < lm[14].y;
+}
+
+function isIndexOnly(lm) {
+    const indexUp = lm[8].y < lm[6].y;
+    const middleDown = lm[12].y > lm[10].y;
+    const ringDown = lm[16].y > lm[14].y;
+    return indexUp && middleDown && ringDown;
 }

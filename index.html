@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Air Canvas Pro - Gesture-Based Drawing</title>
+    <title>Air Canvas Pro | Next-Gen Gesture Drawing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #00ff88;
+            --secondary: #00ccff;
+            --bg-dark: #0a0a12;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,433 +21,274 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
             color: #fff;
-            min-height: 100vh;
+            line-height: 1.6;
             overflow-x: hidden;
         }
 
-        /* Navigation */
+        /* --- Animated Background --- */
+        .bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.4;
+        }
+
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            animation: float 20s infinite alternate;
+        }
+
+        .blob-1 { background: var(--primary); top: -10%; left: -10%; }
+        .blob-2 { background: var(--secondary); bottom: -10%; right: -10%; animation-delay: -5s; }
+
+        @keyframes float {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(100px, 100px) rotate(30deg); }
+        }
+
+        /* --- Navigation --- */
         nav {
             position: fixed;
             top: 0;
             width: 100%;
-            padding: 1.5rem 5%;
+            padding: 1.5rem 10%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(10, 10, 18, 0.5);
         }
 
         .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text; /* For Safari/Chrome */
+    background-clip: text;         /* Standard property - ADD THIS LINE */
+    -webkit-text-fill-color: transparent;
+}
 
-        nav a {
-            color: #00ff88;
+        nav .links a {
+            color: #ccc;
             text-decoration: none;
-            margin-left: 2rem;
-            transition: all 0.3s ease;
+            margin-left: 2.5rem;
             font-weight: 500;
+            font-size: 0.9rem;
+            transition: 0.3s;
         }
 
-        nav a:hover {
-            color: #00ccff;
-            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
+        nav .links a:hover { color: var(--primary); }
 
-        /* Hero Section */
+        /* --- Hero Section --- */
         .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 5%;
+            padding: 10rem 10% 5rem;
             text-align: center;
-            margin-top: 3rem;
-        }
-
-        .hero-content {
-            max-width: 900px;
-            animation: fadeInUp 1s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .hero h1 {
-            font-size: 4.5rem;
+            font-size: clamp(3rem, 8vw, 5rem);
             font-weight: 800;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
             line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -2px;
         }
 
-        .hero .subtitle {
-            font-size: 1.5rem;
-            color: #b0b0b0;
-            margin-bottom: 2rem;
-            font-weight: 300;
+        .hero p {
+            font-size: 1.25rem;
+            color: #aaa;
+            max-width: 600px;
+            margin-bottom: 2.5rem;
         }
 
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            color: #0f3460;
+        .cta-group { display: flex; gap: 1rem; }
+
+        .btn {
             padding: 1rem 2.5rem;
-            font-size: 1.1rem;
+            border-radius: 100px;
             font-weight: 700;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.3);
-            margin-right: 1rem;
+            text-decoration: none;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.5);
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: #000;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
         }
 
-        .cta-button.secondary {
-            background: transparent;
-            color: #00ccff;
-            border: 2px solid #00ccff;
-            box-shadow: none;
+        .btn-secondary {
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            background: var(--glass);
         }
 
-        .cta-button.secondary:hover {
-            background: rgba(0, 204, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 204, 255, 0.3);
-        }
+        .btn:hover { transform: scale(1.05); }
 
-        /* Features Section */
-        .features {
-            padding: 6rem 5%;
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .feature-card {
-            background: rgba(15, 52, 96, 0.4);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .feature-card:hover {
-            border-color: rgba(0, 255, 136, 0.5);
-            background: rgba(15, 52, 96, 0.6);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
-        }
-
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .feature-card h3 {
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-            color: #00ff88;
-        }
-
-        .feature-card p {
-            color: #b0b0b0;
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-
-        /* How It Works */
-        .how-it-works {
-            padding: 6rem 5%;
-        }
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .step {
-            text-align: center;
+        /* --- App Preview Mockup --- */
+        .preview-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 4rem auto;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
             position: relative;
         }
 
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            border-radius: 50%;
+        .preview-window {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #0f3460;
-            margin: 0 auto 1rem;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .step h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
+        .preview-window::before {
+            content: "PREVIEW MODE";
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: 5px;
+            opacity: 0.3;
         }
 
-        .step p {
-            color: #b0b0b0;
-            font-size: 0.95rem;
-        }
+        /* --- Features Grid --- */
+        .features { padding: 8rem 10%; }
 
-        /* Gestures Section */
-        .gestures {
-            padding: 6rem 5%;
-            background: rgba(0, 0, 0, 0.3);
-        }
+        .section-header { text-align: center; margin-bottom: 4rem; }
+        .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
 
-        .gestures-grid {
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
         }
 
-        .gesture-item {
-            background: rgba(15, 52, 96, 0.4);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 2px solid rgba(0, 255, 136, 0.3);
+        .card {
+            background: var(--glass);
+            padding: 3rem 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            transition: 0.4s;
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-10px);
+        }
+
+        .icon { font-size: 2.5rem; margin-bottom: 1.5rem; display: block; }
+        .card h3 { margin-bottom: 1rem; color: var(--primary); }
+        .card p { color: #888; font-size: 0.95rem; }
+
+        /* --- Tech Stack --- */
+        .tech-footer {
+            padding: 4rem;
             text-align: center;
-            transition: all 0.3s ease;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 4rem;
         }
 
-        .gesture-item.draw {
-            border-color: #00ff88;
+        .tech-logos {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            opacity: 0.5;
+            filter: grayscale(1);
+            margin-top: 2rem;
         }
 
-        .gesture-item.draw:hover {
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .gesture-item.erase {
-            border-color: #ff6b6b;
-        }
-
-        .gesture-item.erase:hover {
-            background: rgba(255, 107, 107, 0.1);
-        }
-
-        .gesture-name {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-
-        .gesture-item.draw .gesture-name {
-            color: #00ff88;
-        }
-
-        .gesture-item.erase .gesture-name {
-            color: #ff6b6b;
-        }
-
-        .gesture-description {
-            color: #b0b0b0;
-            line-height: 1.6;
-        }
-
-        /* Footer */
-        footer {
-            padding: 3rem 5%;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            border-top: 1px solid rgba(0, 255, 136, 0.1);
-            color: #b0b0b0;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
-            }
-        }
+        .tech-logos img { height: 30px; }
 
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .hero .subtitle {
-                font-size: 1.1rem;
-            }
-
-            nav a {
-                margin-left: 1rem;
-                font-size: 0.9rem;
-            }
-
-            .section-title {
-                font-size: 1.8rem;
-            }
+            nav .links { display: none; }
+            .hero h1 { font-size: 3rem; }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
+
+    <div class="bg-canvas">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
     <nav>
-        <div class="logo">Air Canvas Pro</div>
-        <div>
+        <div class="logo">AIR CANVAS PRO</div>
+        <div class="links">
             <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#gestures">Gestures</a>
+            <a href="#how-it-works">Technology</a>
+            <a href="app.html" style="color: var(--primary)">Launch App</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-content">
-            <h1>Draw with Your Hands in the Air</h1>
-            <p class="subtitle">Professional gesture-based drawing powered by AI hand tracking</p>
-            <button class="cta-button" onclick="location.href='app.html'">Launch Air Canvas</button>
-            <button class="cta-button secondary" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">Learn More</button>
+        <h1>Your Hands Are <br> The Brush.</h1>
+        <p>Experience the most intuitive gesture-based creative suite. Powered by advanced AI hand tracking and real-time spatial mapping.</p>
+        <div class="cta-group">
+            <a href="app.html" class="btn btn-primary">Start Drawing Now</a>
+            <a href="#features" class="btn btn-secondary">View Capabilities</a>
+        </div>
+
+        <div class="preview-container">
+            <div class="preview-window">
+                </div>
         </div>
     </section>
 
-    <!-- Features Section -->
     <section class="features" id="features">
-        <h2 class="section-title">✨ Powerful Features</h2>
+        <div class="section-header">
+            <h2>Engineered for Creativity</h2>
+            <p style="color: #666">Professional tools meets spatial computing.</p>
+        </div>
         <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🎨</div>
-                <h3>Intuitive Drawing</h3>
-                <p>Use your index finger to draw smooth, natural strokes with real-time hand tracking</p>
+            <div class="card">
+                <span class="icon">🖐️</span>
+                <h3>Neural Tracking</h3>
+                <p>21-point hand landmark detection ensures sub-millimeter precision for every stroke you make in the air.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Smart Erasing</h3>
-                <p>Open your palm fully to erase nearby drawings with precision control</p>
+            <div class="card">
+                <span class="icon">✨</span>
+                <h3>Bespoke UI</h3>
+                <p>A minimalist glassmorphism interface that stays out of your way while providing full creative control.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌈</div>
-                <h3>Color Customization</h3>
-                <p>Choose any color from the full spectrum to match your creative vision</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎚️</div>
-                <h3>Brush Control</h3>
-                <p>Adjust brush size from 1-50px for detailed work or bold strokes</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">↩️</div>
-                <h3>Undo Support</h3>
-                <p>Step back through your drawing history with a single click</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💾</div>
-                <h3>Save & Export</h3>
-                <p>Export your masterpiece as PNG to share with the world</p>
+            <div class="card">
+                <span class="icon">⚡</span>
+                <h3>Real-time HUD</h3>
+                <p>Advanced telemetry monitoring lighting quality and hand detection status in a persistent spatial overlay.</p>
             </div>
         </div>
     </section>
 
-    <!-- How It Works -->
-    <section class="how-it-works" id="how-it-works">
-        <h2 class="section-title">🚀 How It Works</h2>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Allow Camera Access</h3>
-                <p>Grant permission to use your webcam for hand tracking</p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Position Your Hand</h3>
-                <p>Place your hand in front of the camera within the visible area</p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Start Drawing</h3>
-                <p>Extend your index finger to draw or open your palm to erase</p>
-            </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <h3>Customize & Export</h3>
-                <p>Adjust colors, sizes, and save your amazing artwork</p>
-            </div>
+    <footer class="tech-footer">
+        <p>© 2026 Air Canvas Pro. Built for the future of digital art.</p>
+        <div class="tech-logos">
+            <img src="https://mediapipe.dev/assets/img/mediapipe_logo.png" alt="MediaPipe">
+            <img src="https://p5js.org/assets/img/p5js.svg" alt="p5.js">
         </div>
-    </section>
-
-    <!-- Gestures Section -->
-    <section class="gestures" id="gestures">
-        <h2 class="section-title">🖐️ Hand Gestures</h2>
-        <div class="gestures-grid">
-            <div class="gesture-item draw">
-                <div class="gesture-name">Index Finger</div>
-                <div class="gesture-description">
-                    Extend only your index finger to draw smooth, precise lines on the canvas. Perfect for detailed artwork.
-                </div>
-            </div>
-            <div class="gesture-item erase">
-                <div class="gesture-name">Open Palm</div>
-                <div class="gesture-description">
-                    Open your hand fully with all fingers spread to activate the eraser and remove drawings in the area.
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2026 Air Canvas Pro. Powered by MediaPipe & p5.js</p>
     </footer>
+
 </body>
 </html>

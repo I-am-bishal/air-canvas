@@ -31,18 +31,64 @@ body {
 
 #controls {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 100;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.05); /* Ultra-thin transparency */
+    backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 12px 30px;
+    border-radius: 100px; /* Capsule shape for a professional feel */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+/* Upgrade button styling */
+.control-group button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    border-radius: 50px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.control-group button:hover {
+    background: var(--primary); /* Use your #00ff88 */
+    color: #000;
+    border-color: var(--primary);
+    transform: translateY(-2px);
 }
 
 .control-group {
+    margin-bottom: 0; /* Horizontal alignment */
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.control-group:last-child {
+    border-right: none;
+}
+
+/* Professional Input Styling */
+input[type="color"] {
+    appearance: none;
+    background: none;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+}.control-group {
     margin-bottom: 15px;
 }
 
@@ -86,14 +132,23 @@ body {
 
 #status {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    z-index: 100;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 10px 20px;
-    border-radius: 25px;
+    bottom: 30px;
+    left: 40px;
+    background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 4px;
+    border-left: 3px solid #00ff88; /* The "Active" accent */
+    font-family: 'Inter', sans-serif;
+}
+
+#gesture-status {
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 #gesture-status {
@@ -123,14 +178,44 @@ video {
     position: relative;
     width: 280px;
     height: 280px;
-    background: rgba(0, 0, 0, 0.7);
+    background: #000;
+    border-radius: 20px; /* Matching your screenshot's rounded look */
     border: 2px solid #00ff88;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 
-        0 0 20px rgba(0, 255, 136, 0.3),
-        inset 0 0 20px rgba(0, 255, 136, 0.05);
-    backdrop-filter: blur(5px);
+    overflow: hidden; /* CRITICAL: Clips the video to the frame */
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+/* Force the p5 video element to fill the HUD if shown */
+video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+}
+/* Mirror the video feed in the HUD */
+
+#hud-wrapper video {
+    transform: scaleX(-1);
+    filter: brightness(1.2) contrast(1.1) saturate(1.2);
+}
+
+/* Make sure the main drawing canvas is the base layer */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+#hud-status {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10; /* Keeps labels above the video */
 }
 
 #hud-canvas {

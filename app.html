@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Air Canvas Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
@@ -41,33 +41,17 @@
     </div>
 
     <!-- HUD Camera Preview -->
-    <div id="hud-container">
-        <div id="hud-wrapper">
-            <canvas id="hud-canvas"></canvas>
-            <div id="hud-frame"></div>
-            <div id="hud-crosshair"></div>
-            <div class="hud-corner hud-corner-tl"></div>
-            <div class="hud-corner hud-corner-tr"></div>
-            <div class="hud-corner hud-corner-bl"></div>
-            <div class="hud-corner hud-corner-br"></div>
-            <div id="hud-status">
-                <div class="hud-status-item">
-                    <span class="hud-label">CAM</span>
-                    <span id="cam-status" class="hud-value">●</span>
-                </div>
-                <div class="hud-status-item">
-                    <span class="hud-label">LIGHT</span>
-                    <span id="light-status" class="hud-value">●</span>
-                </div>
-                <div class="hud-status-item">
-                    <span class="hud-label">HAND</span>
-                    <span id="hand-status" class="hud-value">●</span>
-                </div>
-            </div>
-            <button id="hud-toggle" title="Toggle camera HUD">⊕</button>
+<div id="hud-container">
+    <div id="hud-wrapper">
+        <canvas id="hud-canvas"></canvas> 
+        <div id="hud-frame"></div>
+        <div id="hud-status">
+            <div class="hud-status-item">CAM <span id="cam-status" class="hud-value active">●</span></div>
+            <div class="hud-status-item">LIGHT <span id="light-status" class="hud-value active">●</span></div>
+            <div class="hud-status-item">HAND <span id="hand-status" class="hud-value">●</span></div>
         </div>
     </div>
-    
+</div>    
     <script src="sketch.js"></script>
 </body>
 </html>
